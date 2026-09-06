@@ -1,38 +1,84 @@
-.App {
-  text-align: center;
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.overlay-root {
+  width: 100vw;
+  height: 100vh;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  align-items: flex-start;
+  justify-content: flex-start;
+  background: transparent;
+  overflow: hidden;
 }
 
-.App-link {
-  color: #61dafb;
+/* In settings mode, show a dark page bg so the canvas boundary is obvious */
+.overlay-root.settings-active {
+  background: #0a0a0a;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.overlay-canvas {
+  position: relative;
+  transform-origin: 0 0;
+  background: transparent;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* In settings mode, give the canvas a visible checkerboard so you can see its bounds */
+.settings-active .overlay-canvas {
+  background:
+    repeating-conic-gradient(#1a1a1a 0% 25%, #141414 0% 50%) 50% / 20px 20px;
+  box-shadow: 0 0 0 2px #333, 0 0 40px rgba(0,0,0,0.8);
+}
+
+.overlay-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 99998;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+}
+
+.settings-indicator {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  padding: 4px 16px;
+  background: rgba(0,0,0,0.8);
+  color: #00ff88;
+  font-family: monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  z-index: 99999;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.hint-indicator {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  padding: 2px 8px;
+  background: rgba(0,0,0,0.4);
+  color: rgba(255,255,255,0.2);
+  font-family: monospace;
+  font-size: 10px;
+  z-index: 99999;
+  pointer-events: none;
+  transition: opacity 2s;
+  animation: hintFade 5s forwards;
+}
+
+@keyframes hintFade {
+  0% { opacity: 1; }
+  60% { opacity: 1; }
+  100% { opacity: 0; }
 }
