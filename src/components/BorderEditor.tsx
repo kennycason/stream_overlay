@@ -99,18 +99,33 @@ const TilePreview: React.FC<TilePreviewProps> = ({ tile, sheet, scale, label, se
 const BorderEditor: React.FC<BorderEditorProps> = ({ skin, spriteSheets, onChange }) => {
   const [activeSlot, setActiveSlot] = useState<SlotName | null>(null);
   const [activeSheetId, setActiveSheetId] = useState<string>(spriteSheets[0]?.id || '');
+  const [selectedTile, setSelectedTile] = useState<{ spriteSheetId: string; region: SpriteRegion } | null>(null);
 
   const activeSheet = spriteSheets.find(s => s.id === activeSheetId);
   const activeTile = activeSlot ? skin[activeSlot] : null;
 
-  const handleSelectRegion = useCallback((region: SpriteRegion) => {
-    if (!activeSlot || !activeSheetId) return;
-    const existing = skin[activeSlot];
+  const assignTileToSlot = useCallback((slot: SlotName, spriteSheetId: string, region: SpriteRegion) => {
+    const existing = skin[slot];
     const newTile: BorderTile = existing
-      ? { ...existing, region, spriteSheetId: activeSheetId }
-      : createEmptyBorderTile(activeSheetId, region);
-    onChange({ ...skin, [activeSlot]: newTile });
-  }, [activeSlot, activeSheetId, skin, onChange]);
+      ? { ...existing, region, spriteSheetId }
+      : createEmptyBorderTile(spriteSheetId, region);
+    onChange({ ...skin, [slot]: newTile });
+  }, [skin, onChange]);
+
+  const handleSelectRegion = useCallback((region: SpriteRegion) => {
+    if (!activeSheetId) return;
+    setSelectedTile({ spriteSheetId: activeSheetId, region });
+    if (activeSlot) assignTileToSlot(activeSlot, activeSheetId, region);
+  }, [activeSlot, activeSheetId, assignTileToSlot]);
+
+  const handleSlotClick = useCallback((slot: SlotName) => {
+    if (selectedTile) {
+      setActiveSlot(slot);
+      assignTileToSlot(slot, selectedTile.spriteSheetId, selectedTile.region);
+      return;
+    }
+    setActiveSlot(activeSlot === slot ? null : slot);
+  }, [activeSlot, selectedTile, assignTileToSlot]);
 
   const updateTileProperty = useCallback((prop: keyof BorderTile, value: any) => {
     if (!activeSlot || !skin[activeSlot]) return;
@@ -160,42 +175,7 @@ const BorderEditor: React.FC<BorderEditorProps> = ({ skin, spriteSheets, onChang
         </select>
       </div>
 
-      {/* Sprite sheet picker — FULL WIDTH, ALWAYS VISIBLE, NO SCROLL */}
-      <div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-          <span style={{ fontSize: 12, color: '#aaa' }}>
-            {activeSlot ? `Pick tile for: ${SLOT_LABELS[activeSlot]}` : 'Select a slot below, then click a tile'}
-          </span>
-          {spriteSheets.length > 1 && (
-            <>
-              <div style={{ flex: 1 }} />
-              <label style={{ fontSize: 12, color: '#aaa' }}>Sheet: </label>
-              <select
-                value={activeSheetId}
-                onChange={(e) => setActiveSheetId(e.target.value)}
-                style={{ background: '#222', border: '1px solid #444', color: '#fff', fontSize: 12 }}
-              >
-                {spriteSheets.map(s => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
-            </>
-          )}
-        </div>
-        {activeSheet ? (
-          <SpriteSheetPicker
-            sheet={activeSheet}
-            onSelectRegion={handleSelectRegion}
-            selectedRegion={activeTile?.spriteSheetId === activeSheetId ? activeTile?.region || null : null}
-          />
-        ) : (
-          <div style={{ color: '#666', fontSize: 12, padding: 20, background: '#111', border: '1px solid #222', textAlign: 'center' }}>
-            No sprite sheets uploaded. Upload one in the Sprite Sheets tab.
-          </div>
-        )}
-      </div>
-
-      {/* Bottom row: 9-slice grid + tile controls + preview */}
+      {/* Border controls stay above the potentially tall sprite sheet. */}
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
         {/* 9-slice grid */}
         <div>
@@ -222,7 +202,7 @@ const BorderEditor: React.FC<BorderEditorProps> = ({ skin, spriteSheets, onChang
                   scale={skin.scale}
                   label={SLOT_LABELS[slot]}
                   selected={activeSlot === slot}
-                  onClick={() => setActiveSlot(activeSlot === slot ? null : slot)}
+                  onClick={() => handleSlotClick(slot)}
                 />
               );
             })}
@@ -265,11 +245,15 @@ const BorderEditor: React.FC<BorderEditorProps> = ({ skin, spriteSheets, onChang
               </>
             ) : activeSlot ? (
               <div style={{ fontSize: 11, color: '#666' }}>
-                Click a tile above to assign to "{SLOT_LABELS[activeSlot]}"
+                Click a tile below to assign to "{SLOT_LABELS[activeSlot]}"
+              </div>
+            ) : selectedTile ? (
+              <div style={{ fontSize: 11, color: '#00ff88' }}>
+                Click a slot to place the selected tile
               </div>
             ) : (
               <div style={{ fontSize: 11, color: '#444' }}>
-                Click a slot to start editing
+                Select a tile below or click a slot to start editing
               </div>
             )}
           </div>
@@ -289,6 +273,48 @@ const BorderEditor: React.FC<BorderEditorProps> = ({ skin, spriteSheets, onChang
             <SpriteBorder skin={skin} spriteSheets={spriteSheets} width={previewWidth} height={previewHeight} />
           </div>
         </div>
+      </div>
+
+      {/* Sprite sheet picker — full width so tile details remain easy to inspect. */}
+      <div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+          <span style={{ fontSize: 12, color: '#aaa' }}>
+            {selectedTile
+              ? `Selected tile: ${selectedTile.region.width}x${selectedTile.region.height}px — click a border slot above to place it`
+              : activeSlot
+                ? `Pick tile for: ${SLOT_LABELS[activeSlot]}`
+                : 'Pick a tile, then click a border slot above'}
+          </span>
+          {spriteSheets.length > 1 && (
+            <>
+              <div style={{ flex: 1 }} />
+              <label style={{ fontSize: 12, color: '#aaa' }}>Sheet: </label>
+              <select
+                value={activeSheetId}
+                onChange={(e) => {
+                  setActiveSheetId(e.target.value);
+                  setSelectedTile(null);
+                }}
+                style={{ background: '#222', border: '1px solid #444', color: '#fff', fontSize: 12 }}
+              >
+                {spriteSheets.map(s => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </>
+          )}
+        </div>
+        {activeSheet ? (
+          <SpriteSheetPicker
+            sheet={activeSheet}
+            onSelectRegion={handleSelectRegion}
+            selectedRegion={selectedTile?.spriteSheetId === activeSheetId ? selectedTile.region : null}
+          />
+        ) : (
+          <div style={{ color: '#666', fontSize: 12, padding: 20, background: '#111', border: '1px solid #222', textAlign: 'center' }}>
+            No sprite sheets uploaded. Upload one in the Sprite Sheets tab.
+          </div>
+        )}
       </div>
     </div>
   );
