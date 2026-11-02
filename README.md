@@ -1,4 +1,20 @@
-# Getting Started with Create React App
+# Kentroid Stream Overlay
+
+A customizable browser-based stream overlay editor with resizable panels, sprite-sheet borders, and importable/exportable layouts.
+
+## Samples
+
+<img src="images/samples/Kentroid%20Stream%20Overlay%20Super%20Mario%20World%20Blocks.png" alt="Kentroid Stream Overlay using Super Mario World blocks" width="100%" />
+
+<p align="center">
+  <img src="images/samples/Kentroid%20Stream%20Overlay%20Super%20Mario%20World%20Coins.png" alt="Kentroid Stream Overlay using Super Mario World coins" width="49%" />
+  <img src="images/samples/Kentroid%20Stream%20Overlay%20Super%20Metroid%20Blocks.png" alt="Kentroid Stream Overlay using Super Metroid blocks" width="49%" />
+  <br />
+  <img src="images/samples/Kentroid%20Stream%20Overlay%20Ninja%20Turdle.png" alt="Kentroid Stream Overlay Ninja Turdle layout" width="49%" />
+  <img src="images/samples/Kentroid%20Stream%20Overlay%20Ninja%20Turdle%20960x1080.png" alt="Kentroid Stream Overlay Ninja Turdle portrait layout" width="49%" />
+</p>
+
+## Development
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
